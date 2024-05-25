@@ -7,10 +7,14 @@
 #include <unistd.h>
 #include <signal.h>
 #include <mem.h>
+#include "list.h"
+#include "hatest.h"
 
 #include "stepper_client.h"
 
 #define MAX_LINE 65536
+
+LISTC_T(client_t) clients;
 
 static int debug = 0;
 
@@ -107,15 +111,27 @@ int main( int argc, char **argv)
    {
       client_t *clnt = NULL;
       char *query = NULL;
-      int   id = 0;
+      int id = 0;
     
       lineno++;
 
       if(line[0] == '\n' || line[0] == '#')
          continue;
+
       // TODO: If the line equals "bounce_connection", bounce the client connections 
       // to the db.
+
+      if (strcmp(line, "bounce_connection") == 0) {
+         client_t *eachClnt;
+
+         // can't quite figure out why it screams when I do clients.top->lnk
+         LISTC_FOR_EACH(&clients, eachClnt, lnk) {
+            disconnect_cdb2h(eachClnt->db);
+         }
+      }
+
       id = parse_line( line, &query);
+
       if (id<0)
       {
          fprintf( stderr, "Syntax error line %d, expect [NUM query] \"%s\"\n",
@@ -127,7 +143,9 @@ int main( int argc, char **argv)
       clnt = clnt_get(id);
       if (!clnt)
       {
+         // The only weird part about this is that you are doing listc_abl twice.
          clnt = clnt_open(dbname, stage, id);
+         listc_abl(&clients, clnt);
       }
       if(!clnt)
       {
@@ -140,7 +158,6 @@ int main( int argc, char **argv)
          clnt_close(clnt);  
          continue;
       }
-
 
       if (debug)
          fprintf( out, "%d [%s]\n", id, query);
@@ -195,6 +212,11 @@ static int parse_line( char *line, char **query)
 
    if (!sp)
       return -1;
+
+   if(!(strcmp(sp, "bounce_connection"))) {
+      *query = "bounce_connection";
+      return 0; // Is this what I am supposed to return when encountered bounceline?
+   }
 
    /* jump spaces */
    while( *sp && *sp == ' ') sp++;

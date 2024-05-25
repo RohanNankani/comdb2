@@ -12,7 +12,14 @@
  *
  */
 
-struct client;
+struct client
+{
+   int   id;
+   cdb2_hndl_tp *db;
+
+   LINKC_T(struct client) lnk;
+};
+
 typedef struct client client_t;
 
 /**

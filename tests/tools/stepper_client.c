@@ -11,7 +11,7 @@
 /* storing clients (i.e. comm pipes) */
 struct client
 {
-   int   id;
+   int id;
    cdb2_hndl_tp *db;
 
    LINKC_T(struct client) lnk;
