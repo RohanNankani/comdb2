@@ -8,17 +8,6 @@
 #include <cdb2api.h>
 #include "stepper_client.h"
 
-/* storing clients (i.e. comm pipes) */
-struct client
-{
-   int   id;
-   cdb2_hndl_tp *db;
-
-   LINKC_T(struct client) lnk;
-};
-
-LISTC_T(client_t) clients;
-
 /**
  * Opens a client 
  * Returns a client to be used with the next calls
